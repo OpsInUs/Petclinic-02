@@ -19,19 +19,32 @@ pipeline {
                 script {
                     echo "Checking for changes in branch: ${env.BRANCH_NAME}"
                     
-                    // =================== SỬA LỖI Ở ĐÂY ===================
-                    // Trước khi so sánh, fetch branch 'main' từ remote 'origin'
-                    // để Git trong workspace biết đến sự tồn tại của nó.
-                    sh 'git fetch origin main'
-                    // ======================================================
-
-                    // So sánh branch hiện tại với 'origin/main' để tìm các file đã thay đổi.
-                    def changedFiles = sh(script: "git diff --name-only origin/main...HEAD", returnStdout: true).trim()
-
-                    // Nếu không có gì thay đổi (ví dụ: commit đầu tiên trên branch mới), so sánh với commit trước đó.
-                    if (changedFiles.isEmpty() && sh(script: 'git rev-list --count origin/main..HEAD', returnStdout: true).trim() == '1') {
+                    // =================== SỬA LỖI ROBUST HƠN ===================
+                    // Fetch tất cả branches từ remote để đảm bảo có đủ thông tin
+                    sh 'git fetch origin'
+                    
+                    // Kiểm tra xem branch main có tồn tại không
+                    def mainExists = sh(script: 'git rev-parse --verify origin/main', returnStatus: true) == 0
+                    
+                    def changedFiles = ''
+                    
+                    if (mainExists && env.BRANCH_NAME != 'main') {
+                        echo "Comparing with origin/main..."
+                        // So sánh branch hiện tại với 'origin/main'
+                        changedFiles = sh(script: "git diff --name-only origin/main...HEAD", returnStdout: true).trim()
+                        
+                        // Nếu không có thay đổi, có thể branch này là main hoặc mới tách từ main
+                        if (changedFiles.isEmpty()) {
+                            echo "No differences with main branch, comparing with previous commit..."
+                            changedFiles = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
+                        }
+                    } else {
+                        echo "Main branch not found or current branch is main, comparing with previous commit..."
+                        // Fallback: so sánh với commit trước đó
                         changedFiles = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
                     }
+                    // ============================================================
+
                     echo "Changed files:\n${changedFiles}"
 
                     // Danh sách tất cả các service và tên thư mục của chúng
