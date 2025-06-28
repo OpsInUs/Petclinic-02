@@ -19,12 +19,17 @@ pipeline {
                 script {
                     echo "Checking for changes in branch: ${env.BRANCH_NAME}"
                     
-                    // So sánh branch hiện tại với 'main' để tìm các file đã thay đổi.
-                    // Cách này ổn định hơn so với so sánh với commit trước đó (HEAD~1).
+                    // =================== SỬA LỖI Ở ĐÂY ===================
+                    // Trước khi so sánh, fetch branch 'main' từ remote 'origin'
+                    // để Git trong workspace biết đến sự tồn tại của nó.
+                    sh 'git fetch origin main'
+                    // ======================================================
+
+                    // So sánh branch hiện tại với 'origin/main' để tìm các file đã thay đổi.
                     def changedFiles = sh(script: "git diff --name-only origin/main...HEAD", returnStdout: true).trim()
 
                     // Nếu không có gì thay đổi (ví dụ: commit đầu tiên trên branch mới), so sánh với commit trước đó.
-                    if (changedFiles.isEmpty()) {
+                    if (changedFiles.isEmpty() && sh(script: 'git rev-list --count origin/main..HEAD', returnStdout: true).trim() == '1') {
                         changedFiles = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
                     }
                     echo "Changed files:\n${changedFiles}"
