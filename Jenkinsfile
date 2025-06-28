@@ -73,7 +73,25 @@ pipeline {
             }
         }
         
-        // STAGE 2: BUILD, TAG VÀ PUSH DOCKER IMAGE
+        // STAGE 2: BUILD JAR FILES
+        stage('Build JAR Files') {
+            when {
+                expression { env.SKIP_BUILD_PUSH == 'false' }
+            }
+            steps {
+                script {
+                    echo "Building JAR files for changed services..."
+                    
+                    // Build tất cả modules để resolve dependencies
+                    sh './mvnw clean package -DskipTests'
+                    
+                    // List JAR files được tạo
+                    sh 'find . -name "*.jar" -path "*/target/*" | grep -v "original"'
+                }
+            }
+        }
+        
+        // STAGE 3: BUILD, TAG VÀ PUSH DOCKER IMAGE
         stage('Build & Push Image') {
             // Chỉ chạy stage này khi có service thay đổi
             when {
