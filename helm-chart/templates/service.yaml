@@ -1,0 +1,17 @@
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  type: {{ if eq .name "api-gateway" }}NodePort{{ else }}ClusterIP{{ end }}
+  selector:
+    {{- include "petclinic.labels" . | nindent 4 }}
+  ports:
+    - port: {{ .port }}
+      targetPort: {{ .port }}
+      {{- if eq .name "api-gateway" }}
+      nodePort: 30080
+      {{- end }}
+{{- end }}

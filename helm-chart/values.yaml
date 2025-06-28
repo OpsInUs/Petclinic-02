@@ -1,0 +1,22 @@
+services:
+  - name: customers-service
+    image: { repository: your-dockerhub-username/customers-service, tag: main }
+    port: 8080
+  - name: vets-service
+    image: { repository: your-dockerhub-username/vets-service, tag: main }
+    port: 8080
+  - name: visits-service
+    image: { repository: your-dockerhub-username/visits-service, tag: main }
+    port: 8080
+  - name: api-gateway
+    image: { repository: your-dockerhub-username/api-gateway, tag: main }
+    port: 8080
+  - name: config-server
+    image: { repository: your-dockerhub-username/config-server, tag: main }
+    port: 8888
+  - name: discovery-server
+    image: { repository: your-dockerhub-username/discovery-server, tag: main }
+    port: 8761
+  - name: admin-server
+    image: { repository: your-dockerhub-username/admin-server, tag: main }
+    port: 9090
